@@ -12,6 +12,7 @@ using Microsoft.TeamFoundation.DistributedTask.Pipelines;
 using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 
 namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
 {
@@ -70,6 +71,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
             IExecutionContext executionContext,
             string description, string path,
             bool deleteExisting);
+
+        void UpdateDirectory(
+            IExecutionContext executionContext,
+            RepositoryResource repository);
     }
 
     public sealed class BuildDirectoryManager : AgentService, IBuildDirectoryManager, IMaintenanceServiceProvider
@@ -185,10 +190,57 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
             CreateDirectory(
                 executionContext,
                 description: "source directory",
-                path: Path.Combine(HostContext.GetDirectory(WellKnownDirectory.Work), newConfig.BuildDirectory, Constants.Build.Path.SourcesDirectory),
+                path: Path.Combine(HostContext.GetDirectory(WellKnownDirectory.Work), newConfig.SourcesDirectory),
                 deleteExisting: cleanOption == BuildCleanOption.Source);
 
             return newConfig;
+        }
+
+        public void UpdateDirectory(
+            IExecutionContext executionContext,
+            RepositoryResource repository)
+        {
+            // Validate parameters.
+            Trace.Entering();
+            ArgUtil.NotNull(executionContext, nameof(executionContext));
+            ArgUtil.NotNull(executionContext.Variables, nameof(executionContext.Variables));
+            ArgUtil.NotNull(repository, nameof(repository));
+            var trackingManager = HostContext.GetService<ITrackingManager>();
+
+            // Defer to the source provider to calculate the hash key.
+            Trace.Verbose("Calculating build directory hash key.");
+            string hashKey = repository.GetSourceDirectoryHashKey(executionContext);
+            Trace.Verbose($"Hash key: {hashKey}");
+
+            // Load the existing tracking file if one already exists.
+            string trackingFile = Path.Combine(
+                HostContext.GetDirectory(WellKnownDirectory.Work),
+                Constants.Build.Path.SourceRootMappingDirectory,
+                executionContext.Variables.System_CollectionId,
+                executionContext.Variables.System_DefinitionId,
+                Constants.Build.Path.TrackingConfigFile);
+            Trace.Verbose($"Loading tracking config if exists: {trackingFile}");
+            TrackingConfigBase existingConfig = trackingManager.LoadIfExists(executionContext, trackingFile);
+            ArgUtil.NotNull(existingConfig, nameof(existingConfig));
+
+            // Create a new tracking config if required.
+            TrackingConfig newConfig = ConvertToNewFormat(executionContext, repository, existingConfig);
+            ArgUtil.NotNull(newConfig, nameof(newConfig));
+
+            var repoPath = repository.Properties.Get<string>(RepositoryPropertyNames.Path);
+            ArgUtil.NotNullOrEmpty(repoPath, nameof(repoPath));
+
+            string _workDirectory = HostContext.GetDirectory(WellKnownDirectory.Work);
+            newConfig.SourcesDirectory = repoPath.Substring(_workDirectory.Length + 1).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            // For existing tracking config files, update the job run properties.
+            Trace.Verbose("Updating job run properties.");
+            trackingManager.UpdateJobRunProperties(executionContext, newConfig, trackingFile);
+
+            // Set the directory variables.
+            executionContext.SetVariable(Constants.Variables.System.DefaultWorkingDirectory, Path.Combine(_workDirectory, newConfig.SourcesDirectory), isFilePath: true);
+            executionContext.SetVariable(Constants.Variables.Build.SourcesDirectory, Path.Combine(_workDirectory, newConfig.SourcesDirectory), isFilePath: true);
+            executionContext.SetVariable(Constants.Variables.Build.RepoLocalPath, Path.Combine(_workDirectory, newConfig.SourcesDirectory), isFilePath: true);
         }
 
         public async Task RunMaintenanceOperation(IExecutionContext executionContext)

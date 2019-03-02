@@ -197,6 +197,130 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
             }
         }
 
+//         [Fact]
+//         [Trait("Level", "L0")]
+//         [Trait("Category", "Worker")]
+//         public void MoveExistingRepository()
+//         {
+//             // Arrange.
+//             using (TestHostContext hc = Setup(existingConfigKind: ExistingConfigKind.Matching))
+//             {
+//                 var repository = new Pipelines.RepositoryResource()
+//                 {
+//                     Alias = "test",
+//                     Type = Pipelines.RepositoryTypes.Git,
+//                     Url = new Uri("http://contoso.visualstudio.com"),
+//                 };
+//                 repository.Properties.Set<String>(Pipelines.RepositoryPropertyNames.Name, "Some endpoint name");
+//                 repository.Properties.Set<String>(Pipelines.RepositoryPropertyNames.Path, "test\\foo");
+
+//                 // Act.
+//                 _buildDirectoryManager.PrepareDirectory(_ec.Object, repository, _workspaceOptions);
+
+//                 // Assert.
+//                 _trackingManager.Verify(x => x.LoadIfExists(_ec.Object, _trackingFile));
+//                 _trackingManager.Verify(x => x.UpdateJobRunProperties(_ec.Object, _existingConfig, _trackingFile));
+
+//                 Assert.True(_existingConfig.SourcesDirectory.Contains("test\\foo"), "Repository not move to right location.");
+//             }
+//         }
+
+//         [Fact]
+//         [Trait("Level", "L0")]
+//         [Trait("Category", "Worker")]
+//         public void MoveExistingRepositoryBackToDefaultLocation()
+//         {
+//             // Arrange.
+//             using (TestHostContext hc = Setup(existingConfigKind: ExistingConfigKind.Matching))
+//             {
+//                 var repository = new Pipelines.RepositoryResource()
+//                 {
+//                     Alias = "test",
+//                     Type = Pipelines.RepositoryTypes.Git,
+//                     Url = new Uri("http://contoso.visualstudio.com"),
+//                 };
+//                 repository.Properties.Set<String>(Pipelines.RepositoryPropertyNames.Name, "Some endpoint name");
+//                 repository.Properties.Set<String>(Pipelines.RepositoryPropertyNames.Path, "test\\foo");
+
+//                 // Act.
+//                 _buildDirectoryManager.PrepareDirectory(_ec.Object, repository, _workspaceOptions);
+
+//                 // Assert.
+//                 _trackingManager.Verify(x => x.LoadIfExists(_ec.Object, _trackingFile));
+//                 _trackingManager.Verify(x => x.UpdateJobRunProperties(_ec.Object, _existingConfig, _trackingFile));
+//                 Assert.True(_existingConfig.SourcesDirectory.Contains("test\\foo"), "Repository not move to right location.");
+
+//                 // Assert.
+//                 _trackingManager.Verify(x => x.LoadIfExists(_ec.Object, _trackingFile));
+//                 _trackingManager.Verify(x => x.UpdateJobRunProperties(_ec.Object, _existingConfig, _trackingFile));
+//                 _buildDirectoryManager.PrepareDirectory(_ec.Object, _repository, _workspaceOptions);
+//                 Assert.Equal(_existingConfig.SourcesDirectory, Path.Combine(_existingConfig.BuildDirectory, Constants.Build.Path.SourcesDirectory));
+//             }
+//         }
+
+//         [Fact]
+//         [Trait("Level", "L0")]
+//         [Trait("Category", "Worker")]
+//         public void MoveExistingRepositoryInvalidPath()
+//         {
+//             // Arrange.
+//             using (TestHostContext hc = Setup(existingConfigKind: ExistingConfigKind.Matching))
+//             {
+//                 var unexpected = false;
+
+//                 var repository = new Pipelines.RepositoryResource()
+//                 {
+//                     Alias = "test",
+//                     Type = Pipelines.RepositoryTypes.Git,
+//                     Url = new Uri("http://contoso.visualstudio.com"),
+//                 };
+//                 repository.Properties.Set<String>(Pipelines.RepositoryPropertyNames.Name, "Some endpoint name");
+// #if OS_WINDOWS
+//                 repository.Properties.Set(Pipelines.RepositoryPropertyNames.Path, "C:\\");
+// #else
+//                 repository.Properties.Set(Pipelines.RepositoryPropertyNames.Path, "/root");
+// #endif
+
+//                 // Act.
+//                 try
+//                 {
+//                     _buildDirectoryManager.PrepareDirectory(_ec.Object, repository, _workspaceOptions);
+//                     unexpected = true;
+//                 }
+//                 catch (Exception ex)
+//                 {
+//                     hc.GetTrace().Error(ex);
+//                 }
+
+//                 // Assert.
+//                 Assert.False(unexpected, "Prepare directory should failed with invalid repository path (rooted path).");
+
+//                 unexpected = false;
+//                 repository = new Pipelines.RepositoryResource()
+//                 {
+//                     Alias = "test",
+//                     Type = Pipelines.RepositoryTypes.Git,
+//                     Url = new Uri("http://contoso.visualstudio.com"),
+//                 };
+//                 repository.Properties.Set<String>(Pipelines.RepositoryPropertyNames.Name, "Some endpoint name");
+//                 repository.Properties.Set<String>(Pipelines.RepositoryPropertyNames.Path, "~!@#$%\\^&*(/)_+{}\0:<>?");
+
+//                 // Act.
+//                 try
+//                 {
+//                     _buildDirectoryManager.PrepareDirectory(_ec.Object, repository, _workspaceOptions);
+//                     unexpected = true;
+//                 }
+//                 catch (Exception ex)
+//                 {
+//                     hc.GetTrace().Error(ex);
+//                 }
+
+//                 // Assert.
+//                 Assert.False(unexpected, "Prepare directory should failed with invalid repository path (invalid char in path).");
+//             }
+//         }
+
         // TODO: Updates legacy config.
 
         private TestHostContext Setup(
@@ -275,6 +399,10 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
                 _newConfig = new TrackingConfig(_ec.Object, _repository, 3, HashKey);
                 Assert.Equal("3", _newConfig.BuildDirectory);
             }
+
+            // Create dummy folders
+            Directory.CreateDirectory(Path.Combine(_workFolder, _newConfig.SourcesDirectory));
+            File.WriteAllText(Path.Combine(_workFolder, _newConfig.SourcesDirectory, "git"), "A git repository");
 
             // Setup the tracking manager.
             _trackingManager = new Mock<ITrackingManager>();

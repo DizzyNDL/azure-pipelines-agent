@@ -45,6 +45,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Telemetry
             }
         }
 
+        public bool Enabled
+        {
+            get
+            {
+                return true;
+            }
+            set
+            {
+                throw new NotSupportedException();
+            }
+        }
+
         private void ProcessPublishTelemetryCommand(IExecutionContext context, Dictionary<string, string> eventProperties, string data)
         {
             ArgUtil.NotNull(context, nameof(context));

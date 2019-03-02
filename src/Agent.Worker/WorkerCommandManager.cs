@@ -9,6 +9,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
     public interface IWorkerCommandManager : IAgentService
     {
         bool TryProcessCommand(IExecutionContext context, string input);
+        void EnableCommandExtension(IExecutionContext context, string commandArea);
+        void DisableCommandExtension(IExecutionContext context, string commandArea);
     }
 
     public sealed class WorkerCommandManager : AgentService, IWorkerCommandManager
@@ -26,6 +28,32 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
             {
                 Trace.Info($"Register command extension for area {commandExt.CommandArea}");
                 _commandExtensions[commandExt.CommandArea] = commandExt;
+            }
+        }
+
+        public void EnableCommandExtension(IExecutionContext context, string commandArea)
+        {
+            if (_commandExtensions.TryGetValue(commandArea, out IWorkerCommandExtension extension))
+            {
+                Trace.Info($"Enable command extension '{commandArea}'");
+                extension.Enabled = true;
+            }
+            else
+            {
+                throw new ArgumentException(StringUtil.Loc("CommandNotFound", commandArea));
+            }
+        }
+
+        public void DisableCommandExtension(IExecutionContext context, string commandArea)
+        {
+            if (_commandExtensions.TryGetValue(commandArea, out IWorkerCommandExtension extension))
+            {
+                Trace.Info($"Disable command extension '{commandArea}'");
+                extension.Enabled = false;
+            }
+            else
+            {
+                throw new ArgumentException(StringUtil.Loc("CommandNotFound", commandArea));
             }
         }
 
@@ -51,6 +79,13 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
 
             if (_commandExtensions.TryGetValue(command.Area, out IWorkerCommandExtension extension))
             {
+                if (!extension.Enabled)
+                {
+                    context.Error($"Command '{extension.CommandArea}' is not enabled for the current context.");
+                    context.CommandResult = TaskResult.Failed;
+                    return false;
+                }
+
                 if (!extension.SupportedHostTypes.HasFlag(context.Variables.System_HostType))
                 {
                     context.Error(StringUtil.Loc("CommandNotSupported", command.Area, context.Variables.System_HostType));
@@ -94,6 +129,8 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker
     public interface IWorkerCommandExtension : IExtension
     {
         string CommandArea { get; }
+
+        bool Enabled { get; set; }
 
         HostTypes SupportedHostTypes { get; }
 

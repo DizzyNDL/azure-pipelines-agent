@@ -518,5 +518,109 @@ namespace Microsoft.VisualStudio.Services.Agent.Tests.Worker.Build
                 Assert.True(DateTimeOffset.Now.AddSeconds(1) >= config.LastRunOn);
             }
         }
+
+//         [Fact]
+//         [Trait("Level", "L0")]
+//         [Trait("Category", "Worker")]
+//         public void CreatesTrackingConfigWithRepositoryPath()
+//         {
+//             using (TestHostContext hc = Setup())
+//             {
+//                 // Arrange.
+//                 const string HashKey = "Some hash key";
+//                 string trackingFile = Path.Combine(_workFolder, "trackingconfig.json");
+//                 DateTimeOffset testStartOn = DateTimeOffset.Now;
+
+//                 // Act.
+//                 var repository = new Pipelines.RepositoryResource() { Url = new Uri(RepositoryUrl) };
+//                 repository.Properties.Set(Pipelines.RepositoryPropertyNames.Path, "foo\\bar");
+
+//                 _trackingManager.Create(_ec.Object, repository, HashKey, trackingFile, false);
+
+//                 // Assert.
+//                 TrackingConfig config = _trackingManager.LoadIfExists(_ec.Object, trackingFile) as TrackingConfig;
+//                 Assert.Equal(
+//                     Path.Combine("1", Constants.Build.Path.ArtifactsDirectory),
+//                     config.ArtifactsDirectory);
+//                 Assert.Equal("1", config.BuildDirectory);
+//                 Assert.Equal(CollectionId, config.CollectionId);
+//                 Assert.Equal(CollectionUrl, config.CollectionUrl);
+//                 Assert.Equal(DefinitionId, config.DefinitionId);
+//                 Assert.Equal(DefinitionName, config.DefinitionName);
+//                 Assert.Equal(3, config.FileFormatVersion);
+//                 Assert.Equal(HashKey, config.HashKey);
+//                 // Manipulate the expected seconds due to loss of granularity when the
+//                 // date-time-offset is serialized in a friendly format.
+//                 Assert.True(testStartOn.AddSeconds(-1) <= config.LastRunOn);
+//                 Assert.True(DateTimeOffset.Now.AddSeconds(1) >= config.LastRunOn);
+//                 Assert.Equal(RepositoryUrl, config.RepositoryUrl);
+//                 Assert.Equal("build", config.System);
+//                 Assert.Equal(
+//                     Path.Combine("1", Constants.Build.Path.TestResultsDirectory),
+//                     config.TestResultsDirectory);
+//                 Assert.Equal(
+//                     Path.Combine("1", "foo\\bar"),
+//                     config.SourcesDirectory);
+//             }
+//         }
+
+//         [Fact]
+//         [Trait("Level", "L0")]
+//         [Trait("Category", "Worker")]
+//         public void CreatesTrackingConfigWithInvalidRepositoryPath()
+//         {
+//             using (TestHostContext hc = Setup())
+//             {
+//                 var trace = hc.GetTrace();
+//                 // Arrange.
+//                 const string HashKey = "Some hash key";
+//                 string trackingFile = Path.Combine(_workFolder, "trackingconfig.json");
+//                 DateTimeOffset testStartOn = DateTimeOffset.Now;
+
+//                 // Act.
+//                 var unexpected = false;
+//                 var repository = new Pipelines.RepositoryResource() { Url = new Uri(RepositoryUrl) };
+// #if OS_WINDOWS
+//                 repository.Properties.Set(Pipelines.RepositoryPropertyNames.Path, "C:\\");
+// #else
+//                 repository.Properties.Set(Pipelines.RepositoryPropertyNames.Path, "/root");
+// #endif
+
+//                 try
+//                 {
+//                     _trackingManager.Create(_ec.Object, repository, HashKey, trackingFile, false);
+//                     unexpected = true;
+//                     TrackingConfig config = _trackingManager.LoadIfExists(_ec.Object, trackingFile) as TrackingConfig;
+//                     trace.Info("Repository directory: " + config.SourcesDirectory);
+//                 }
+//                 catch (Exception ex)
+//                 {
+//                     trace.Error(ex);
+//                 }
+
+//                 // Assert.
+//                 Assert.False(unexpected, "Tracking file creation should failed with invalid repository path (rooted path).");
+
+//                 // Act.
+//                 unexpected = false;
+//                 repository = new Pipelines.RepositoryResource() { Url = new Uri(RepositoryUrl) };
+//                 repository.Properties.Set(Pipelines.RepositoryPropertyNames.Path, "~!@#$%\\^&*(/)_+{}\0:<>?");
+
+//                 try
+//                 {
+//                     _trackingManager.Create(_ec.Object, repository, HashKey, trackingFile, false);
+//                     unexpected = true;
+//                     TrackingConfig config = _trackingManager.LoadIfExists(_ec.Object, trackingFile) as TrackingConfig;
+//                     trace.Info("Repository directory: " + config.SourcesDirectory);
+//                 }
+//                 catch (Exception ex)
+//                 {
+//                     trace.Error(ex);
+//                 }
+
+//                 // Assert.
+//                 Assert.False(unexpected, "Tracking file creation should failed with invalid repository path (invalid char in path).");
+//             }
+//         }
     }
 }

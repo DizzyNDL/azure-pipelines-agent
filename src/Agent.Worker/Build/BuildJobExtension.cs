@@ -35,7 +35,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
         {
             string rootedPath = null;
 
-            if (SourceProvider != null && Repository != null)
+            if (SourceProvider != null && Repository != null && StringUtil.ConvertToBoolean(Repository.Properties.Get<string>("__VSTS_READY")))
             {
                 path = SourceProvider.GetLocalPath(context, Repository, path) ?? string.Empty;
                 Trace.Info($"Build JobExtension resolving path use source provide: {path}");

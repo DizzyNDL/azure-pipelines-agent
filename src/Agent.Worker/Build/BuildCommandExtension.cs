@@ -16,6 +16,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.Build
 
         public string CommandArea => "build";
 
+        public bool Enabled
+        {
+            get
+            {
+                return true;
+            }
+            set
+            {
+                throw new NotSupportedException();
+            }
+        }
+
         public HostTypes SupportedHostTypes => HostTypes.All;
 
         public void ProcessCommand(IExecutionContext context, Command command)

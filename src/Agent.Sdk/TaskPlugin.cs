@@ -212,6 +212,17 @@ namespace Agent.Sdk
             Output($"##[command]{Escape(command)}");
         }
 
+        public void UpdateRepository(string alias, Dictionary<string, string> properties)
+        {
+            string commandProperties = string.Empty;
+            foreach (var property in properties)
+            {
+                commandProperties += $"{Escape(property.Key)}={Escape(property.Value)};";
+            }
+
+            Output($"##vso[agentplugin.updaterepository alias={Escape(alias)};{commandProperties}]");
+        }
+
         public AgentCertificateSettings GetCertConfiguration()
         {
             bool skipCertValidation = StringUtil.ConvertToBoolean(this.Variables.GetValueOrDefault("Agent.SkipCertValidation")?.Value);

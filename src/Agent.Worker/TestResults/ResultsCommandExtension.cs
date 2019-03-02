@@ -33,6 +33,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
 
         public Type ExtensionType => typeof(IWorkerCommandExtension);
 
+        public bool Enabled
+        {
+            get
+            {
+                return true;
+            }
+            set
+            {
+                throw new NotSupportedException();
+            }
+        }
+
         public string CommandArea => "results";
 
         public HostTypes SupportedHostTypes => HostTypes.All;
@@ -100,7 +112,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
             }
             _executionContext.AsyncCommands.Add(commandContext);
 
-            if(_isTestRunOutcomeFailed)
+            if (_isTestRunOutcomeFailed)
             {
                 _executionContext.Result = TaskResult.Failed;
                 _executionContext.Error(StringUtil.Loc("FailedTestsInResults"));
@@ -131,7 +143,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
                     _executionContext.Debug(StringUtil.Format("Reading test results from file '{0}'", resultFile));
                     TestRunData resultFileRunData = publisher.ReadResultsFromFile(runContext, resultFile);
 
-                    if(_failTaskOnFailedTests)
+                    if (_failTaskOnFailedTests)
                     {
                         _isTestRunOutcomeFailed = GetTestRunOutcome(resultFileRunData);
                     }
@@ -265,7 +277,7 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
                         _executionContext.Debug(StringUtil.Format("Reading test results from file '{0}'", resultFile));
                         TestRunData testRunData = publisher.ReadResultsFromFile(runContext, resultFile, runName);
 
-                        if(_failTaskOnFailedTests)
+                        if (_failTaskOnFailedTests)
                         {
                             _isTestRunOutcomeFailed = GetTestRunOutcome(testRunData);
                         }
@@ -309,9 +321,9 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.TestResults
         /// <returns></returns>
         private bool GetTestRunOutcome(TestRunData testRunData)
         {
-            foreach(var testCaseResultData in testRunData.Results)
+            foreach (var testCaseResultData in testRunData.Results)
             {
-                if(testCaseResultData.Outcome == TestOutcome.Failed.ToString() || testCaseResultData.Outcome == TestOutcome.Aborted.ToString())
+                if (testCaseResultData.Outcome == TestOutcome.Failed.ToString() || testCaseResultData.Outcome == TestOutcome.Aborted.ToString())
                 {
                     return true;
                 }

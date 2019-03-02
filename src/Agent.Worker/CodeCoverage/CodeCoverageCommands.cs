@@ -20,6 +20,18 @@ namespace Microsoft.VisualStudio.Services.Agent.Worker.CodeCoverage
         private string _codeCoverageTool;
         private string _reportDirectory;
 
+        public bool Enabled
+        {
+            get
+            {
+                return true;
+            }
+            set
+            {
+                throw new NotSupportedException();
+            }
+        }
+
         public HostTypes SupportedHostTypes => HostTypes.Build;
 
         public void ProcessCommand(IExecutionContext context, Command command)
